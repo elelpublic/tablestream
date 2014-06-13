@@ -1,2 +1,21 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# jedit backup files
+*~
+
+# MAC OS
+.DS_Store
+
+# Eclipse (generate them using gradle eclipse)
+.classpath
+.project
+
+# Gradle
 .gradle
-build/
+build
+build-eclipse
