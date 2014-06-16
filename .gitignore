@@ -14,8 +14,11 @@
 # Eclipse (generate them using gradle eclipse)
 .classpath
 .project
+.settings
 
 # Gradle
 .gradle
+gradle
+gradle-app.setting
 build
 eclipse-build
