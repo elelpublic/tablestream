@@ -18,4 +18,4 @@
 # Gradle
 .gradle
 build
-build-eclipse
+eclipse-build
