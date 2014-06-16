@@ -185,6 +185,21 @@ public class SimpleDate implements Comparable<SimpleDate> {
   }
 
 
+  /**
+   * Create java calendar from this date information.
+   * 
+   * @return Java calendar
+   * 
+   */
+  public Calendar toCalendar() {
+    Calendar calendar = Calendar.getInstance();
+    calendar.set( Calendar.YEAR, year );
+    calendar.set( Calendar.MONTH, month - 1 );
+    calendar.set( Calendar.DAY_OF_MONTH, day );
+    return calendar;
+  }
+  
+  
 }
 
 

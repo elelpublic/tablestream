@@ -7,8 +7,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.infodesire.commons.DATE;
+import com.infodesire.commons.FILE;
+import com.infodesire.commons.datetime.SimpleDate;
+import com.infodesire.commons.datetime.SimpleDateTime;
+import com.infodesire.commons.datetime.SimpleTime;
 import com.infodesire.tablestream.Cell;
 import com.infodesire.tablestream.Row;
+import com.infodesire.tablestream.ValueType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -50,35 +56,63 @@ public class TSInOutTest {
     int ROWS = 10;
     int COLUMNS = 10;
     
+    SimpleDate date = new SimpleDate( 2014, 10, 10 );
+    
     OutputStream out = getOut();
     TSWriter tsout = new TSWriter( out, ROWS );
     List<Row> rows = new ArrayList<Row>();
     for( int i = 0; i < ROWS; i++ ) {
+      
       Row row = new Row();
+      
       for( int c = 0; c < COLUMNS; c++ ) {
-        Cell cell;
-        if( c % 4 == 0 ) { // LIST
+        
+        Cell cell = null;
+        ValueType type = ValueType.values()[ c % ValueType.values().length ];
+        
+        if( type == ValueType.STRING ) {
+          cell = new Cell( "CELL " + i + ":" + c );
+        }
+        else if( type == ValueType.INTEGER ) {
+          cell = new Cell( i * c );
+        }
+        else if( type == ValueType.DOUBLE ) {
+          cell = new Cell( (double) i / (double) c );
+        }
+        else if( type == ValueType.BOOLEAN ) {
+          cell = new Cell( i % 2 == 0 );
+        }
+        else if( type == ValueType.LIST ) {
           List<String> list = new ArrayList<String>();
           for( int e = 0; e < c * 2; e++ ) {
             list.add( "Entry_" + e );
           }
           cell = new Cell( list );
         }
-        else if( c % 3 == 0 ) { // STRING
-          cell = new Cell( "CELL " + i + ":" + c );
+        else if( type == ValueType.DATE ) {
+          cell = new Cell( date );
         }
-        else if( c % 2 == 0 ) { // DOUBLE
-          cell = new Cell( (double) i / (double) c );
+        else if( type == ValueType.TIME ) {
+          SimpleTime time = new SimpleTime( i % 23, i % 59 );
+          cell = new Cell( time );
         }
-        else { // INT
-          cell = new Cell( i * c );
+        else if( type == ValueType.DATETIME ) {
+          SimpleTime time = new SimpleTime( i % 23, i % 59 );
+          cell = new Cell( new SimpleDateTime( date, time ) );
         }
+        
         row.add( cell );
+        
+        date = DATE.add( date, 1 );
+        
       }
+      
       rows.add( row );
       tsout.write( row );
     }
     tsout.close();
+    
+    FILE.print( tmpFile );
     
     InputStream in = getIn();
     TSReader tsin = new TSReader( in );
@@ -97,7 +131,6 @@ public class TSInOutTest {
   private OutputStream getOut() throws IOException {
     if( useFile ) {
       tmpFile = File.createTempFile( getClass().getSimpleName() + "-", ".ts" );
-      System.out.println( tmpFile.getAbsolutePath() );
       return new FileOutputStream( tmpFile );
     }
     else {

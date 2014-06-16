@@ -67,8 +67,8 @@ public class TSWriter extends TSInOut {
   }
 
 
-  public void write( Row currentRow ) throws IOException {
-    oout.writeObject( currentRow );
+  public void write( Row row ) throws IOException {
+    oout.writeObject( row );
   }
   
   

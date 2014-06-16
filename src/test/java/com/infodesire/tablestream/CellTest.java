@@ -5,8 +5,10 @@ package com.infodesire.tablestream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.infodesire.commons.datetime.SimpleDate;
+import com.infodesire.commons.datetime.SimpleDateTime;
 import com.infodesire.commons.datetime.SimpleTime;
 
 import java.awt.Color;
@@ -166,6 +168,64 @@ public class CellTest {
   }
   
 
+  @Test
+  public void testCompare() throws InterruptedException {
+    
+    // nulls
+    assertTrue( new Cell( (String) null ).compareTo( new Cell( "ABC" ) ) < 0 );
+    assertTrue( new Cell( "ABC" ).compareTo( new Cell( (String) null ) ) > 0 );
+    assertTrue( new Cell( (String) null ).compareTo( new Cell( (String) null ) ) == 0 );
+
+    // different types
+    int a = new Cell( "ABC" ).compareTo( new Cell( 12 ) );
+    int b = new Cell( 12 ).compareTo( new Cell( "ABC" ) );
+    assertTrue( a != 0 );
+    assertTrue( a == -b );
+    
+    // string
+    assertTrue( new Cell( "ABC" ).compareTo( new Cell( "ABC" ) ) == 0 );
+    assertTrue( new Cell( "ABC" ).compareTo( new Cell( "DEF" ) ) < 0 );
+    assertTrue( new Cell( "ABCD" ).compareTo( new Cell( "ABC" ) ) > 0 );
+    
+    // integer
+    assertTrue( new Cell( 12 ).compareTo( new Cell( 12 ) ) == 0 );
+    assertTrue( new Cell( 12 ).compareTo( new Cell( 13 ) ) < 0 );
+    assertTrue( new Cell( 13 ).compareTo( new Cell( 12 ) ) > 0 );
+    
+    // double
+    assertTrue( new Cell( 12.3 ).compareTo( new Cell( 12.3 ) ) == 0 );
+    assertTrue( new Cell( 12.3 ).compareTo( new Cell( 13.2 ) ) < 0 );
+    assertTrue( new Cell( 13.2 ).compareTo( new Cell( 12.3 ) ) > 0 );
+    
+    // boolean
+    assertTrue( new Cell( true ).compareTo( new Cell( true ) ) == 0 );
+    assertTrue( new Cell( false ).compareTo( new Cell( false ) ) == 0 );
+    assertTrue( new Cell( false ).compareTo( new Cell( true ) ) < 0 );
+    assertTrue( new Cell( true ).compareTo( new Cell( false ) ) > 0 );
+    
+    // date
+    assertTrue( new Cell( new SimpleDate( 2014, 10, 3 ) ).compareTo( new Cell( new SimpleDate( 2014, 10, 3 ) ) ) == 0 );
+    assertTrue( new Cell( new SimpleDate( 2014, 10, 3 ) ).compareTo( new Cell( new SimpleDate( 2014, 10, 4 ) ) ) < 0 );
+    assertTrue( new Cell( new SimpleDate( 2014, 10, 4 ) ).compareTo( new Cell( new SimpleDate( 2014, 10, 3 ) ) ) > 0 );
+    
+    // time
+    assertTrue( new Cell( new SimpleTime( 10, 11, 12, 200 ) ).compareTo( new Cell( new SimpleTime( 10, 11, 12, 200 ) ) ) == 0 );
+    assertTrue( new Cell( new SimpleTime( 10, 11, 12, 200 ) ).compareTo( new Cell( new SimpleTime( 10, 11, 12, 201 ) ) ) < 0 );
+    assertTrue( new Cell( new SimpleTime( 10, 11, 12, 201 ) ).compareTo( new Cell( new SimpleTime( 10, 11, 12, 200 ) ) ) > 0 );
+    
+    // datetime
+    assertTrue( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 200 ) ).compareTo( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 200 ) ) ) == 0 );
+    assertTrue( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 200 ) ).compareTo( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 201 ) ) ) < 0 );
+    assertTrue( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 201 ) ).compareTo( new Cell( new SimpleDateTime( 2014, 10, 3, 10, 11, 12, 200 ) ) ) > 0 );
+
+    // list
+    assertTrue( new Cell( new SimpleList( "A", "B", "C" ) ).compareTo( new Cell( new SimpleList( "A", "B", "C" ) ) ) == 0 );
+    assertTrue( new Cell( new SimpleList( "A", "B", "A" ) ).compareTo( new Cell( new SimpleList( "A", "B", "C" ) ) ) < 0 );
+    assertTrue( new Cell( new SimpleList( "A", "B", "D" ) ).compareTo( new Cell( new SimpleList( "A", "B", "C" ) ) ) > 0 );
+    
+  }
+  
+  
 }
 
 

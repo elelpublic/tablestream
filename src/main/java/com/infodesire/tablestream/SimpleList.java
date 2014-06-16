@@ -21,6 +21,15 @@ public class SimpleList implements Comparable<SimpleList>, Iterable<String> {
   private ArrayList<String> list = new ArrayList<String>();
   
   
+  public SimpleList( String... list ) {
+    if( list != null ) {
+      for( String entry : list ) {
+        this.list.add( entry );
+      }
+    }
+  }
+  
+  
   public SimpleList( Iterable<String> list ) {
     if( list != null ) {
       for( String entry : list ) {

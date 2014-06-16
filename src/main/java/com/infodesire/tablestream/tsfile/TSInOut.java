@@ -5,6 +5,7 @@ package com.infodesire.tablestream.tsfile;
 
 import com.infodesire.tablestream.Cell;
 import com.infodesire.tablestream.Row;
+import com.infodesire.tablestream.SimpleList;
 import com.thoughtworks.xstream.XStream;
 
 import java.nio.charset.Charset;
@@ -25,9 +26,11 @@ public class TSInOut {
     xStream.processAnnotations( TSHeader.class);
     xStream.processAnnotations( Row.class);
     xStream.processAnnotations( Cell.class);
+    xStream.processAnnotations( SimpleList.class);
     xStream.registerConverter( new SimpleDateConverter() );
     xStream.registerConverter( new SimpleTimeConverter() );
     xStream.registerConverter( new SimpleDateTimeConverter() );
+    xStream.alias( "s", String.class );
     return xStream;
   }
 

@@ -36,13 +36,6 @@ public enum ValueType {
   
   
   /**
-   * List of strings
-   * 
-   */
-  LIST( "l" ),
-  
-  
-  /**
    * Date
    * 
    */
@@ -53,14 +46,21 @@ public enum ValueType {
    * Time
    * 
    */
-  TIME( "ti"),
+  TIME( "ti" ),
   
   
   /**
    * Date and time (in the sense of a timestamp)
    * 
    */
-  DATETIME( "dt")
+  DATETIME( "dt" ),
+  
+  
+  /**
+   * List of strings
+   * 
+   */
+  LIST( "l" )
   
   
   ;

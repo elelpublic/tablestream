@@ -9,12 +9,15 @@
 
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
+apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 
 group = 'com.infodesire'
 version = '0.1'
+mainClassName = 'com.infodesire.tablestream.Main'
+
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -35,7 +38,10 @@ dependencies {
      // xstream
      'xpp3:xpp3_min:1.1.4c',
      'com.thoughtworks.xstream:xstream:1.4.3',
-	 'xmlpull:xmlpull:1.1.3.1'
+	 'xmlpull:xmlpull:1.1.3.1',
+	 
+	 // cli
+	 'commons-cli:commons-cli:1.2'
      
     )
 
