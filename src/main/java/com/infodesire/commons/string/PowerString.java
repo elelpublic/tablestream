@@ -57,6 +57,40 @@ public class PowerString {
     return string == null || string.length() == 0;
   }
 
+  
+  /**
+   * Remove and return the part of the string after the last occurrence of 'sep'.
+   * <p>
+   * 
+   * This method is handy for instance to parse a file name "text.doc.txt". Each call with "."
+   * as separator will remove and return the next component. If no separator is found anymore,
+   * the whole remaining string (text) will be returned and the powerstring set to null.  
+   * 
+   * @param sep The separator string
+   * @return The string removed or the whole string if 'sep' was not found. This object will contain only the rest of the original text after 'sep'.
+   * 
+   */
+  public String removeAfterLast( String sep ) {
+
+    if( string == null || sep == null ) {
+      return null;
+    }
+    
+    int at = string.lastIndexOf( sep );
+    
+    if( at == -1 ) {
+      String result = string;
+      string = null;
+      return result;
+    }
+    
+    String result = string.substring( at + sep.length() );
+    string = string.substring( 0, at );
+    return result;
+
+  }
+
+
 }
 
 

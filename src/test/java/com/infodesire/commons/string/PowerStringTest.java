@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-
 public class PowerStringTest {
 
 
@@ -46,4 +45,28 @@ public class PowerStringTest {
     
   }
 
+  @Test
+  public void testRemoveAfterLast() {
+    
+    PowerString ps;
+    
+    ps = new PowerString( null );
+    
+    assertNull( ps.removeBeforeFirst( "." ) );
+    assertNull( ps.removeBeforeFirst( null ) );
+    
+    ps = new PowerString( "test.doc.txt" );
+    assertNull( ps.removeAfterLast( null ) );
+    assertEquals( "txt", ps.removeAfterLast( "." ) );
+    assertEquals( "test.doc", ps.toString() );
+    assertEquals( "doc", ps.removeAfterLast( "." ) );
+    assertEquals( "test", ps.toString() );
+    assertEquals( "test", ps.removeBeforeFirst( "." ) );
+    assertTrue( ps.isEmpty() );
+    assertNull( ps.toString() );
+    
+  }
+  
 }
+
+

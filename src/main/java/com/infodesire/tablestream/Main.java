@@ -3,6 +3,8 @@
 
 package com.infodesire.tablestream;
 
+import com.infodesire.commons.string.PowerString;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,13 +40,22 @@ public class Main {
       );
     options.addOption( OptionBuilder //
       .hasArg() //
-      .withDescription( "Name of file" ) //
-      .create( "file" ) // 
+      .withDescription( "Name of directory" ) //
+      .create( "dir" ) // 
       );
     options.addOption( OptionBuilder //
       .hasArg() //
-      .withDescription( "Name of directory" ) //
-      .create( "dir" ) // 
+      .withDescription( "Sort index. A comma separated list (no spaces please) of column numbers. Use -num for descending." ) //
+      .create( "sort" ) // 
+      );
+    options.addOption( OptionBuilder //
+      .hasArg() //
+      .withDescription( "Max number of open source files at one time." ) //
+      .create( "maxOpen" ) // 
+      );
+    options.addOption( OptionBuilder //
+      .withDescription( "Operate quietly." ) //
+      .create( "q" ) // 
       );
   }
   
@@ -61,39 +72,60 @@ public class Main {
         System.in.read();
       }
       
+      if( cli.hasOption( "q" ) ) {
+        TS.quiet = true;
+      }
+      
       @SuppressWarnings("unchecked")
       List<String> commands = cli.getArgList();
       if( commands.size() == 0 ) {
         usage( "Command missing" );
         return;
       }
+
+      if( commands.size() == 1 ) {
+        usage( "File name missing" );
+        return;
+      }
       
       String command = commands.get( 0 );
+      File file = new File( commands.get( 1 ) );
+      commands.remove( 0 );
+      commands.remove( 0 );
+      
+      long t0 = System.currentTimeMillis();
       
       if( command.equals( "random" ) ) {
-        commands.remove( 0 );
-        randomOrGeneric( cli, commands, true );
+        randomOrGeneric( cli, file, commands,  true );
       }
       else if( command.equals( "generic" ) ) {
-        commands.remove( 0 );
-        randomOrGeneric( cli, commands, false );
+        randomOrGeneric( cli, file, commands, false );
       }
       else if( command.equals( "split" ) ) {
-        commands.remove( 0 );
-        split( cli, commands );
+        split( cli, file, commands );
+      }
+      else if( command.equals( "join" ) ) {
+        join( cli, file, commands );
       }
       else if( command.equals( "sort" ) ) {
-        commands.remove( 0 );
-        split( cli, commands );
+        sort( cli, file, commands );
       }
       else if( command.equals( "bigsort" ) ) {
-        commands.remove( 0 );
-        System.out.println( "Not implemented yet." );
+        bigsort( cli, file, commands );
+      }
+      else if( command.equals( "count" ) ) {
+        count( cli, file, commands );
+      }
+      else if( command.equals( "sorted" ) ) {
+        sorted( cli, file, commands );
       }
       else {
         usage( "Unknwon command '" + command + "'" );
         return;
       }
+      
+      long t1 = System.currentTimeMillis();
+      info( "Finished command '" + command + "' in " + ( (double) ( t1 - t0 ) / 1000 ) + " s."  );
       
     }
     catch( ParseException ex ) {
@@ -106,17 +138,130 @@ public class Main {
   }
 
 
-  private static void split( CommandLine cli, List<String> commands ) {
+  private static void sort( CommandLine cli, File file, List<String> commands ) {
+    
+    PowerString s = new PowerString( file.getName() );
+    String extension = s.removeAfterLast( "." );
+    String name = s.toString();
+    
+    File sortedFile = new File( name + ".sorted." + extension );
 
-    String value = cli.getOptionValue( "file" );
+    SortIndex sortIndex = new SortIndex( 1 );
+    String value = cli.getOptionValue( "sort" );
     if( value == null ) {
-      usage( "No file specified (-file)" );
-      return;
+      info( "No sort index specified. Using default: -sort 1" );
+    }
+    else {
+      sortIndex.fromString( value );
+    }
+    
+    try {
+      TS.sort( file, sortedFile, sortIndex );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+
+
+  private static void bigsort( CommandLine cli, File file, List<String> commands ) {
+    
+    PowerString s = new PowerString( file.getName() );
+    String extension = s.removeAfterLast( "." );
+    String name = s.toString();
+    
+    File sortedFile = new File( name + ".sorted." + extension );
+    
+    SortIndex sortIndex = new SortIndex( 1 );
+    String value = cli.getOptionValue( "sort" );
+    if( value == null ) {
+      info( "No sort index specified. Using default: -sort 1" );
+    }
+    else {
+      sortIndex.fromString( value );
+    }
+    
+    int rowCount;
+
+    value = cli.getOptionValue( "rows" );
+    
+    if( value == null ) {
+      rowCount = 1000;
+      info( "No row count was specified. Using default: -rows 1000" );
+    } 
+    else {
+      rowCount = Integer.parseInt( value );
     }
 
-    File file = new File( value );
+    int maxOpen = 4;
+    value = cli.getOptionValue( "maxOpen" );
+    if( value != null ) {
+      maxOpen = Integer.parseInt( value );
+    }
+    else {
+      info( "No max open files was specified. Using default: -maxOpen 4" );
+    }
     
-    value = cli.getOptionValue( "dir" );
+    try {
+      TS.bigsort( file, sortedFile, sortIndex, rowCount, maxOpen );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+  
+  
+  private static void count( CommandLine cli, File file, List<String> commands ) {
+    
+    try {
+      CountResult result = TS.count( file );
+      error( result.toString() );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+  
+  
+  private static void sorted( CommandLine cli, File file, List<String> commands ) {
+    
+    SortIndex sortIndex = new SortIndex( 1 );
+    String value = cli.getOptionValue( "sort" );
+    if( value == null ) {
+      info( "No sort index specified. Using default: -sort 1" );
+    }
+    else {
+      sortIndex.fromString( value );
+    }
+    
+    try {
+      int line = TS.sorted( file, sortIndex );
+      error( line == -1 ? "sorted" : "not sorted at row " + line );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+  
+  private static void split( CommandLine cli, File file, List<String> commands ) {
+
+    String value = cli.getOptionValue( "dir" );
     if( value == null ) {
       usage( "No dir specified (-dir)" );
       return;
@@ -130,14 +275,20 @@ public class Main {
     
     if( value == null ) {
       rowCount = 1000;
-      log( "No row count was specified (-rows). Using default value of 1000." );
+      info( "No row count was specified. Using default: -rows 1000" );
     } 
     else {
       rowCount = Integer.parseInt( value );
     }
     
+    SortIndex sortIndex = null;
+    value = cli.getOptionValue( "sort" );
+    if( value != null ) {
+      sortIndex = SortIndex.fromString( value );
+    }
+
     try {
-      TS.split( file, rowCount, dir );
+      TS.split( file, rowCount, dir, sortIndex );
     }
     catch( FileNotFoundException ex ) {
       usage( "" + ex );
@@ -149,16 +300,53 @@ public class Main {
   }
 
 
-  private static void randomOrGeneric( CommandLine cli, List<String> commands,
+  private static void join( CommandLine cli, File file, List<String> commands ) {
+    
+    String value = cli.getOptionValue( "dir" );
+    if( value == null ) {
+      usage( "No dir specified (-dir)" );
+      return;
+    }
+    
+    File dir = new File( value );
+    
+    SortIndex sortIndex = null;
+    value = cli.getOptionValue( "sort" );
+    if( value != null ) {
+      sortIndex = SortIndex.fromString( value );
+    }
+
+    int maxOpen = 4;
+    value = cli.getOptionValue( "maxOpen" );
+    if( value != null ) {
+      maxOpen = Integer.parseInt( value );
+    }
+    else {
+      info( "No max open files was specified. Using default: -maxOpen 4" );
+    }
+    
+    try {
+      TS.join( dir, file, sortIndex, maxOpen );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+  
+  
+  private static void randomOrGeneric( CommandLine cli, File file, List<String> commands,
     boolean random ) throws IOException {
     
     int rowCount, columnCount;
-    File file;
     
     String value = cli.getOptionValue( "rows" );
     if( value == null ) {
       rowCount = 1000;
-      log( "No row count was specified (-rows). Using default value of 1000." );
+      info( "No row count was specified. Using default: -rows 1000" );
     } 
     else {
       rowCount = Integer.parseInt( value );
@@ -167,22 +355,11 @@ public class Main {
     value = cli.getOptionValue( "cols" );
     if( value == null ) {
       columnCount = 20;
-      log( "No row count was specified (-cols). Using default value of 20." );
+      info( "No row count was specified. Using default: -cols 20" );
     } 
     else {
       columnCount = Integer.parseInt( value );
     }
-    
-    value = cli.getOptionValue( "file" );
-    if( value == null ) {
-      file = File.createTempFile( random ? "random-" : "generic-", ".ts" );
-      log( "No file name was specified. Using temp file '" + file.getAbsolutePath() + "'" );
-    } 
-    else {
-      file = new File( value );
-    }
-    
-    long t0 = System.currentTimeMillis();
     
     if( random ) {
       TS.random( file, rowCount, columnCount );
@@ -191,25 +368,35 @@ public class Main {
       TS.generic( file, rowCount, columnCount );
     }
     
-    log( "Generated " + rowCount + " rows in " + ( (double) ( System.currentTimeMillis() - t0 ) / 1000 ) + "s" );
-    
   }
 
-  private static void log( String message ) {
+
+  private static void error( String message ) {
     System.out.println( message );
   }
+  
+  
+  private static void info( String message ) {
+    if( !TS.quiet ) {
+      System.out.println( message );
+    }
+  }
+
 
   private static void usage( String message ) {
     
     System.out.println( message + "\n" );
     HelpFormatter usage = new HelpFormatter();
-    usage.printHelp( "tablestream [OPTIONS] COMMAND [PARAMETERS]\n\n\n", options );
+    usage.printHelp( "tablestream [OPTIONS] COMMAND FILENAME\n\n\n", options );
     System.out.println( "\nCommands are:\n" );
+    System.out.println( "split ................. split file into smaller files (use -sort <args> to created sorted files)" );
+    System.out.println( "join .................. join splitted files into one file (use -sort <args> to assume sorted files and create a sorted file)" );
+    System.out.println( "sorted ................ test if file is sorted (needs sort index via -sort <args>)" );
+    System.out.println( "count ................. count rows" );
     System.out.println( "sort .................. sort a file in memory" );
-    System.out.println( "bigsort ............... sort a big file using split to disk" );
+    System.out.println( "bigsort ............... sort a big file using sorted split + join" );
     System.out.println( "random ................ creates a file with random data" );
     System.out.println( "generic ............... creates a file with generic data" );
-    System.out.println( "split ................. split file into smaller files" );
     
   }
   
