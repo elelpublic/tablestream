@@ -49,8 +49,8 @@ Roadmap
 - 0.2 first internal production release
 - 0.3 multi threading in the bigsort join phase
 
-Whishlist
-=========
+Wishlist
+========
 
 - more file formats: xls(x), csv, html
 
