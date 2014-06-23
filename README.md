@@ -17,19 +17,27 @@ Example Command Lines
 
 Create a random table:
 
+```
 bin/tablestream random test.ts -rows 10000 -cols 4
+```
 
 Create a sorted version of the table:
 
+```
 bin/tablestream bigsort test.ts
+```
 
 Check if sorted:
 
+```
 bin/tablestream sorted test.sorted.ts
+```
 
 Count the rows:
 
+```
 bin/tablestream count test.sorted.ts
+```
 
 Roadmap
 =======
