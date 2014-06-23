@@ -3,6 +3,8 @@
 
 package com.infodesire.commons;
 
+import com.infodesire.commons.string.PowerString;
+
 
 /**
  * Some functions which makes handling strings easier. 
@@ -49,19 +51,26 @@ public class STRING {
 
 
   /**
-   * Create a mumber with leading zeros
+   * Replace once a part in a string with a new part
    * 
-   * @param digits Total number of digits
-   * @param number Number
-   * @return Formatted number
+   * @param string The string containing the old part
+   * @param oldPart The old part to be removed
+   * @param newPart The new part to be inserted
+   * @return The string with replacement
    * 
    */
-  public static String digits( int digits, int number ) {
-    String result = "" + number;
-    while( result.length() < digits ) {
-      result = "0" + result;
+  public static String replace( String string, String oldPart,
+    String newPart ) {
+    
+    if( string.indexOf( oldPart ) == -1 ) {
+      return string;
     }
-    return result;
+    else {
+      PowerString s = new PowerString( string );
+      String before = s.removeBeforeFirst( oldPart );
+      return before + newPart + s.toString();
+    }
+    
   }
 
 

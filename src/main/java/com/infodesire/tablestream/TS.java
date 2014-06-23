@@ -4,12 +4,17 @@
 package com.infodesire.tablestream;
 
 import com.infodesire.commons.FILE;
+import com.infodesire.commons.NUMBER;
 import com.infodesire.commons.STRING;
 import com.infodesire.commons.string.PowerString;
 import com.infodesire.tablestream.sample.SampleData;
 import com.infodesire.tablestream.tsfile.PeekReader;
 import com.infodesire.tablestream.tsfile.TSReader;
 import com.infodesire.tablestream.tsfile.TSWriter;
+import com.infodesire.tablestream.util.Buffer;
+import com.infodesire.tablestream.util.DistributePipe;
+import com.infodesire.tablestream.util.SimplePipe;
+import com.infodesire.tablestream.util.SplitWriter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -27,7 +32,18 @@ import java.util.TreeSet;
 public class TS {
 
   
-  public static boolean quiet = false;
+  private boolean quiet = true;
+  
+  
+  /**
+   * Number of concurrent threads
+   * 
+   */
+  private int numThreads = 1;
+  
+  
+  public TS() {
+  }
 
 
   /**
@@ -39,7 +55,7 @@ public class TS {
    * @throws IOException if an error occurs while writing the data to file
    * 
    */
-  public static void random( File targetFile, int rowCount, int columnCount ) throws IOException {
+  public void random( File targetFile, int rowCount, int columnCount ) throws IOException {
     SampleData.random( targetFile, rowCount, columnCount );
   }
 
@@ -53,94 +69,182 @@ public class TS {
    * @throws IOException if an error occurs while writing the data to file
    * 
    */
-  public static void generic( File targetFile, int rowCount, int columnCount ) throws IOException {
+  public void generic( File targetFile, int rowCount, int columnCount ) throws IOException {
     SampleData.generic( targetFile, rowCount, columnCount );
   }
 
 
   /**
    * Split a *.ts file into smaller files. Store them in dir.
+   * <p>
+   * 
+   * To create files which maintain the original order, you should
+   * set the thread number to 1.
+   * <p>
    * 
    * @param sourceFile Source file
    * @param rowCount Max number of rows in target files.
    * @param targetDir Directory for target files
-   * @param sortIndex Optiona: if specified the target files will be sorted in memory before writing to disk
+   * @param sortIndex Optional: if specified the target files will be sorted in memory before writing to disk
    * @return Split files
    * @throws IOException If an error occurs reading the source file or writing the target files 
    * @throws FileNotFoundException The source file does not exists
+   * @throws InterruptedException if a threading error occurred
    * 
    */
-  public static List<File> split( File sourceFile, int rowCount, File targetDir, SortIndex sortIndex ) throws FileNotFoundException, IOException {
+  public List<File> split( File sourceFile, int rowCount, File targetDir, SortIndex sortIndex ) throws FileNotFoundException, IOException, InterruptedException {
     
-    PowerString s = new PowerString( sourceFile.getName() );
-    String name = s.removeBeforeFirst( "." );
-    String extenstion = s.toString();
-    
-    int digits = 5;
-    int counter = 1;
-
     TSReader reader = new TSReader( sourceFile );
+
+    PowerString ps = new PowerString( sourceFile.getName() );
+    String extension = ps.removeAfterLast( "." );
+    String namePattern = ps.toString() + ".${thread}-${num}." + extension;
     
-    int remaining = reader.getRowCount();
-    
-    if( remaining > 0 ) {
-      digits = (int) Math.log10( remaining ) + 1;
+    List<SimplePipe> pipes = new ArrayList<SimplePipe>();
+    List<TableWriter> writers = new ArrayList<TableWriter>();
+    List<TableWriter> buffers = new ArrayList<TableWriter>();
+    for( int i = 0; i < numThreads; i++ ) {
+      String subPattern = STRING.replace( namePattern, "${thread}", NUMBER.digits( 2, i ) );
+      SplitWriter splitWriter = new SplitWriter( rowCount, new TSWriter(), targetDir, subPattern, sortIndex );
+      Buffer buffer = new Buffer( 100 );
+      buffers.add( buffer );
+      writers.add( splitWriter );
+      SimplePipe pipe = new SimplePipe( splitWriter );
+      pipe.setReader( buffer );
+      pipes.add( pipe );
     }
     
     if( !targetDir.exists() ) {
       targetDir.mkdirs();
     }
     
-    File target = null;
-    TSWriter writer = null;
-    int targetSize = 0;
-    SortedSet<Row> buffer = null;
+    DistributePipe splitter = new DistributePipe( buffers );
     
-    List<File> splitFiles = new ArrayList<File>();
-    
-    while( reader.hasNext() ) {
-      
-      if( targetSize == rowCount ) {
-        if( buffer != null ) {
-          for( Row row : buffer ) {
-            writer.write( row );
-          }
-        }
-        writer.close();
-        writer = null;
-        target = null;
-      }
-      
-      if( target == null ) {
-        target = new File( targetDir, name + "." + STRING.digits( digits, counter++ ) + "." + extenstion );
-        splitFiles.add( target );
-        writer = new TSWriter( target, Math.min( rowCount, remaining ) );
-        if( sortIndex != null ) {
-          buffer = new TreeSet<Row>( new RowSorter( sortIndex ) );
-        }
-        targetSize = 0;
-        info( "Writing " + target.getAbsolutePath() );
-      }
-      
-      Row row = reader.next();
-
-      if( buffer != null ) {
-        buffer.add( row );
-      }
-      else {
-        writer.write( row );
-      }
-
-      targetSize++;
-      remaining--;
-      
+    for( SimplePipe pipe : pipes ) {
+      pipe.start();
     }
     
-    writer.close();
+    splitter.start( reader );
     
-    return splitFiles;
+    List<File> allFiles = new ArrayList<File>();
+    
+    for( SimplePipe pipe : pipes ) {
+      pipe.join();
+      pipe.getWriter().close();
+      SplitWriter writer = (SplitWriter) pipe.getWriter();
+      allFiles.addAll( writer.getFiles() );
+    }
+    
+    splitter.join();
+    
+    return allFiles;
     
   }
+  
+  
+//  private List<File> split( TableReader reader, int rowCount, File targetDir,
+//    String namePrefix, String extension, SortIndex sortIndex )
+//    throws FileNotFoundException, IOException, InterruptedException {
+//    
+//    if( !targetDir.exists() ) {
+//      targetDir.mkdirs();
+//    }
+//    
+////    List<SplitThread> threads = new ArrayList<SplitThread>();
+////    for( int i = 0; i < numThreads; i++ ) {
+////      threads.add( new SplitThread( i, numThreads, sourceFile, rowCount, targetDir, sortIndex ) );
+////    }
+////    
+////    for( SplitThread thread : threads ) {
+////      thread.start();
+////    }
+////    
+////    TSReader reader = new TSReader( sourceFile );
+////    int nextThreadNo = 0;
+////    while( reader.hasNext() ) {
+////      Row row = reader.next();
+////      threads.get( nextThreadNo++ ).addRow( row );
+////      if( nextThreadNo == numThreads ) {
+////        nextThreadNo = 0;
+////      }
+////    }
+////    reader.close();
+////    
+////    List<File> files = new ArrayList<File>();
+////    for( SplitThread thread : threads ) {
+////      thread.join();
+////      files.addAll( thread.getFiles() );
+////      Exception ex = thread.getEx();
+////      if( ex != null ) {
+////        if( ex instanceof IOException ) {
+////          throw (IOException) ex;
+////        }
+////        else {
+////          throw new RuntimeException( ex );
+////        }
+////      }
+////    }
+////    
+////    return files;
+//
+//    int digits = 5;
+//    int counter = 1;
+//
+//    File target = null;
+//    TSWriter writer = null;
+//    int targetSize = 0;
+//    SortedSet<Row> buffer = null;
+//    
+//    List<File> splitFiles = new ArrayList<File>();
+//    
+//    for( Row row = reader.next(); row != null; row = reader.next() ) {
+//      
+//      if( targetSize == rowCount ) {
+//        if( buffer != null ) {
+//          for( Row bufferedRow : buffer ) {
+//            writer.write( bufferedRow );
+//          }
+//        }
+//        writer.close();
+//        buffer = null;
+//        writer = null;
+//        target = null;
+//      }
+//      
+//      if( target == null ) {
+//        target = new File( targetDir, namePrefix + "."
+//          + NUMBER.digits( digits, counter++ ) + "." + extension );
+//        splitFiles.add( target );
+//        writer = new TSWriter( target );
+//        if( sortIndex != null ) {
+//          buffer = new TreeSet<Row>( new RowSorter( sortIndex ) );
+//        }
+//        targetSize = 0;
+//        info( "Writing " + target.getAbsolutePath() );
+//      }
+//      
+//      if( buffer != null ) {
+//        buffer.add( row );
+//      }
+//      else {
+//        writer.write( row );
+//      }
+//
+//      targetSize++;
+//      
+//    }
+//    
+//    if( buffer != null ) {
+//      for( Row row : buffer ) {
+//        writer.write( row );
+//      }
+//    }
+//    
+//    writer.close();
+//    
+//    return splitFiles;
+//    
+//  }
   
   
   /**
@@ -155,7 +259,7 @@ public class TS {
    * @throws FileNotFoundException The source file does not exists
    * 
    */
-  public static List<File> join( File sourceDir, File targetFile, SortIndex sortIndex, int maxOpen ) throws FileNotFoundException, IOException {
+  public List<File> join( File sourceDir, File targetFile, SortIndex sortIndex, int maxOpen ) throws FileNotFoundException, IOException {
     
     List<File> sourceFiles = new ArrayList<File>();
     for( File sourceFile : sourceDir.listFiles() ) {
@@ -221,7 +325,7 @@ public class TS {
    * @throws FileNotFoundException Source file was not found 
    * 
    */
-  public static void join( List<File> sourceFiles, File targetFile, SortIndex sortIndex ) throws FileNotFoundException, IOException {
+  public void join( List<File> sourceFiles, File targetFile, SortIndex sortIndex ) throws FileNotFoundException, IOException {
     
     info( "Join " + sourceFiles.size() + " files into " + targetFile );
 
@@ -232,7 +336,7 @@ public class TS {
       readers.add( new PeekReader( new TSReader( sourceFile ) ) );
     }
     
-    TSWriter writer = new TSWriter( targetFile, 0 );
+    TSWriter writer = new TSWriter( targetFile );
 
     boolean hasMore = true;
     while( hasMore ) {
@@ -240,8 +344,8 @@ public class TS {
       int readerIndex = -1;
       for( int i = 0; i < readers.size(); i++ ) {
         PeekReader reader = readers.get( i );
-        if( reader.hasNext() ) {
-          Row peekRow = reader.peek();
+        Row peekRow = reader.peek();
+        if( peekRow != null ) {
           if( nextRow == null ) {
             nextRow = peekRow;
             readerIndex = i;
@@ -267,7 +371,7 @@ public class TS {
   }
 
 
-  private static void info( String message ) {
+  private void info( String message ) {
     if( !quiet ) {
       System.out.println( message );
     }
@@ -283,16 +387,20 @@ public class TS {
    * @throws FileNotFoundException If the input file does not exist 
    * @throws IOException If an error occurred writing or reading the file
    */
-  public static void sort( File file, File sortedFile, SortIndex sortIndex ) throws FileNotFoundException, IOException {
+  public void sort( File file, File sortedFile, SortIndex sortIndex ) throws FileNotFoundException, IOException {
    
     SortedSet<Row> sorted = new TreeSet<Row>( new RowSorter( sortIndex ) );
     TSReader in = new TSReader( file );
-    while( in.hasNext() ) {
-      Row row = in.next();
+    int counter = 1;
+    for( Row row = in.next(); row != null; row = in.next() ) {
       sorted.add( row );
+      if( counter % 1000 == 0 ) {
+        info( "Sorted " + counter + " rows" );
+      }
+      counter++;
     }
     in.close();
-    TSWriter out = new TSWriter( sortedFile, sorted.size() );
+    TSWriter out = new TSWriter( sortedFile );
     for( Row row : sorted ) {
       out.write( row );
     }
@@ -311,15 +419,19 @@ public class TS {
    * @param maxOpen Max number of files to read at one time while joining
    * @throws FileNotFoundException If the input file does not exist 
    * @throws IOException If an error occurred writing or reading the file
+   * @throws InterruptedException if a threading error occurred
    */
-  public static void bigsort( File file, File sortedFile, SortIndex sortIndex,
-    int rowCount, int maxOpen ) throws FileNotFoundException, IOException {
+  public void bigsort( File file, File sortedFile, SortIndex sortIndex,
+    int rowCount, int maxOpen ) throws FileNotFoundException, IOException, InterruptedException {
     
     List<File> tmpFiles = new ArrayList<File>();
     File splitDir = null;
     try {
       splitDir = FILE.createTempDir( "bigsort-tmp-" );
+      long t0 = System.currentTimeMillis();
       tmpFiles.addAll( split( file, rowCount, splitDir, sortIndex ) );
+      long t1 = System.currentTimeMillis();
+      info( "Finished splitting files in " + ( (double) ( t1 - t0 ) / 1000 ) + " s."  );
       tmpFiles.addAll( join( splitDir, sortedFile, sortIndex, maxOpen ) );
     }
     finally {
@@ -348,7 +460,7 @@ public class TS {
    * @throws IOException If an error occurred reading the file
    * 
    */
-  public static CountResult count( File file ) throws FileNotFoundException, IOException {
+  public CountResult count( File file ) throws FileNotFoundException, IOException {
     
     CountResult result = new CountResult();
     
@@ -357,8 +469,7 @@ public class TS {
     int maxCols = 0;
     
     TSReader in = new TSReader( file );
-    while( in.hasNext() ) {
-      Row row = in.next();
+    for( Row row = in.next(); row != null; row = in.next() ) {
       rows++;
       int cols = row.size();
       minCols = Math.min( minCols, cols );
@@ -386,15 +497,14 @@ public class TS {
    * @throws IOException If an error occurred reading the file
    * 
    */
-  public static int sorted( File file, SortIndex sortIndex ) throws FileNotFoundException, IOException {
+  public int sorted( File file, SortIndex sortIndex ) throws FileNotFoundException, IOException {
     
     RowSorter rowSorter = new RowSorter( sortIndex );
     
     int line = 1;
     TSReader in = new TSReader( file );
     Row lastRow = null;
-    while( in.hasNext() ) {
-      Row row = in.next();
+    for( Row row = in.next(); row != null; row = in.next() ) {
       if( lastRow != null ) {
         if( rowSorter.compare( lastRow, row ) > 0 ) {
           return line;
@@ -406,6 +516,106 @@ public class TS {
     
     return -1;
     
+  }
+  
+  
+  /**
+   * @return the quiet
+   */
+  public boolean isQuiet() {
+    return quiet;
+  }
+
+  
+  /**
+   * @param quiet the quiet to set
+   */
+  public void setQuiet( boolean quiet ) {
+    this.quiet = quiet;
+  }
+
+
+  /**
+   * Write part of larger file to new file
+   * 
+   * @param file Source file
+   * @param outputFile Output file
+   * @param first First row (1-based)
+   * @param last Last row (1-base). 0 means last of file.
+   * @return Number of rows written to output file
+   * @throws IOException If an error occurs reading the source file or writing the target files 
+   * @throws FileNotFoundException The source file does not exists
+   * 
+   */
+  public int slice( File file, File outputFile, int first, int last ) throws FileNotFoundException, IOException {
+    
+    TSReader in = new TSReader( file );
+    TSWriter out = new TSWriter( outputFile );
+    int result = 0;
+    try {
+      int rowNum = 1;
+      for( Row row = in.next(); row != null && ( last == 0 || rowNum <= last ); row = in
+        .next() ) {
+        if( rowNum >= first && ( last == 0 || rowNum <= last ) ) {
+          out.write( row );
+          result++;
+        }
+        rowNum++;
+      }
+    }
+    finally {
+      if( in != null ) {
+        in.close();
+      }
+      if( out != null ) {
+        out.close();
+      }
+    }
+    
+    return result;
+    
+  }
+  
+  
+  /**
+   * Getter
+   * 
+   * @return Number of concurrent threads
+   * 
+   */
+  public int getNumThreads() {
+    return numThreads;
+  }
+
+  
+  /**
+   * Setter
+   * 
+   * @param numThreads Number of concurrent threads
+   * 
+   */
+  public void setNumThreads( int numThreads ) {
+    this.numThreads = numThreads;
+    if( this.numThreads < 1 ) {
+      this.numThreads = 1;
+    }
+  }
+
+
+  /**
+   * Read a file into memory
+   * 
+   * @param tsFile File to read
+   * @throws IOException if reading failed
+   * @throws FileNotFoundException if file does not exist
+   */
+  public List<Row> read( File tsFile ) throws FileNotFoundException, IOException {
+    TSReader reader = new TSReader( tsFile );
+    List<Row> rows = new ArrayList<Row>();
+    for( Row row = reader.next(); row != null; row = reader.next() ) {
+      rows.add( row );
+    }
+    return rows;
   }
   
   

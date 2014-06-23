@@ -4,7 +4,7 @@
 package com.infodesire.tablestream.tsfile;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.infodesire.commons.DATE;
@@ -59,7 +59,7 @@ public class TSInOutTest {
     SimpleDate date = new SimpleDate( 2014, 10, 10 );
     
     OutputStream out = getOut();
-    TSWriter tsout = new TSWriter( out, ROWS );
+    TSWriter tsout = new TSWriter( out );
     List<Row> rows = new ArrayList<Row>();
     for( int i = 0; i < ROWS; i++ ) {
       
@@ -116,13 +116,12 @@ public class TSInOutTest {
     
     InputStream in = getIn();
     TSReader tsin = new TSReader( in );
-    assertEquals( ROWS, tsin.getRowCount() );
     for( int i = 0; i < ROWS; i++ ) {
-      assertTrue( tsin.hasNext() );
       Row row = tsin.next();
+      assertTrue( row != null );
       assertEquals( row, rows.get( i ) );
     }
-    assertFalse( tsin.hasNext() );
+    assertNull( tsin.next() );
     tsin.close();
      
   }

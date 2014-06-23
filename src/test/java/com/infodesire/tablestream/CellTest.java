@@ -226,6 +226,28 @@ public class CellTest {
   }
   
   
+  @Test
+  public void testCaptions() {
+    
+    Cell c1, c2;
+    
+    c1 = new Cell( 10 );
+    c2 = new Cell( 20 );
+
+    assertTrue( c1.compareTo( c2 ) < 0 );
+    
+    c1.setCaption( "Zulauf" );
+    assertTrue( c1.compareTo( c2 ) > 0 );
+
+    c2.setCaption( "Abfluss" );
+    assertTrue( c1.compareTo( c2 ) > 0 );
+    
+    c1.setCaption( null );
+    assertTrue( c1.compareTo( c2 ) < 0 );
+    
+  }
+  
+  
 }
 
 

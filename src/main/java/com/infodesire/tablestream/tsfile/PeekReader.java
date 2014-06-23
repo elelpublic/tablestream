@@ -18,21 +18,19 @@ public class PeekReader {
 
   public PeekReader( TSReader reader ) {
     this.reader = reader;
-    if( reader.hasNext() ) {
-      peekRow = reader.next();
-    }
+    peekRow = reader.next();
   }
   
   
-  /**
-   * Test
-   * 
-   * @return Another row is available
-   * 
-   */
-  public boolean hasNext() {
-    return peekRow != null;
-  }
+//  /**
+//   * Test
+//   * 
+//   * @return Another row is available
+//   * 
+//   */
+//  public boolean hasNext() {
+//    return peekRow != null;
+//  }
   
   
   /**
@@ -54,12 +52,7 @@ public class PeekReader {
    */
   public Row next() {
     Row next = peekRow;
-    if( reader.hasNext() ) {
-      peekRow = reader.next();
-    }
-    else {
-      peekRow = null;
-    }
+    peekRow = reader.next();
     return next;
   }
   
@@ -70,6 +63,11 @@ public class PeekReader {
    */
   public void close() {
     reader.close();
+  }
+  
+  
+  public String toString() {
+    return "PeekReader " + reader;
   }
 
 

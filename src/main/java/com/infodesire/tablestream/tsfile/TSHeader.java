@@ -18,9 +18,5 @@ public class TSHeader {
   public int version = 1;
   
   
-  @XStreamAlias( "RowCount" )
-  public int rowCount = 0;
-  
-  
 }
 
