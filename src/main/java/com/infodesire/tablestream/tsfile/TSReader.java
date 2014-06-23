@@ -5,6 +5,7 @@
 package com.infodesire.tablestream.tsfile;
 
 import com.infodesire.tablestream.Row;
+import com.infodesire.tablestream.TableReader;
 import com.thoughtworks.xstream.XStream;
 
 import java.io.File;
@@ -15,14 +16,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.Reader;
-import java.util.Iterator;
 
 
 /**
  * Reader for table stream files *.ts
  *
  */
-public class TSReader extends TSInOut implements Iterator<Row> {
+public class TSReader extends TSInOut implements TableReader {
   
   
   private ObjectInputStream oin;
@@ -37,8 +37,12 @@ public class TSReader extends TSInOut implements Iterator<Row> {
   private Row next;
 
 
+  private String toString;
+
+
   public TSReader( InputStream inputStream ) throws IOException {
     
+    toString = "" + inputStream;
     XStream xstream = createXStream();
     
     Reader in = new InputStreamReader( inputStream, charset );
@@ -56,6 +60,7 @@ public class TSReader extends TSInOut implements Iterator<Row> {
   
   public TSReader( File file ) throws FileNotFoundException, IOException {
     this( new FileInputStream( file ) );
+    toString = file.getAbsolutePath();
   }
 
 
@@ -64,9 +69,15 @@ public class TSReader extends TSInOut implements Iterator<Row> {
   }
 
   
-  @Override
-  public boolean hasNext() {
-    if( next == null ) {
+//  @Override
+//  public boolean hasNext() {
+//    fetchnext();
+//    return !eof;
+//  }
+  
+
+  private void fetchnext() {
+    if( next == null && !eof ) {
       try {
         next = (Row) oin.readObject();
       }
@@ -74,28 +85,17 @@ public class TSReader extends TSInOut implements Iterator<Row> {
         eof = true;
       }
     }
-    return !eof;
   }
-  
+
 
   @Override
   public Row next() {
+    fetchnext();
     Row nextRow = next;
     next = null;
     return nextRow;
   }
   
-
-  @Override
-  public void remove() {
-    throw new UnsupportedOperationException();
-  }
-
-
-  public int getRowCount() {
-    return header.rowCount;
-  }
-
 
   public void close() {
     try {
@@ -124,5 +124,11 @@ public class TSReader extends TSInOut implements Iterator<Row> {
     tsReader.close();
     return header;
   }
+  
+  
+  public String toString() {
+    return toString;
+  }
+
 
 }

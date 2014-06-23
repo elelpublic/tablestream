@@ -22,6 +22,16 @@ public class Row {
   private List<Cell> cells;
   
   
+  public Row() {}
+  
+  
+  public Row( Cell... cells ) {
+    for( Cell cell: cells ) {
+      add( cell );
+    }
+  }
+  
+  
   private List<Cell> getCells() {
     if( cells == null ) {
       cells = new ArrayList<Cell>();

@@ -137,15 +137,17 @@ public class FILE {
    * 
    */
   public static void rmdir( File dir ) {
-    for( File file : dir.listFiles() ) {
-      if( file.isDirectory() ) {
-        rmdir( file );
+    if( dir != null ) {
+      for( File file : JAVA.iterable( dir.listFiles() ) ) {
+        if( file.isDirectory() ) {
+          rmdir( file );
+        }
+        else {
+          file.delete();
+        }
       }
-      else {
-        file.delete();
-      }
+      dir.delete();
     }
-    dir.delete();
   }
 
 

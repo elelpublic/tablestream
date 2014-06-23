@@ -3,6 +3,8 @@
 
 package com.infodesire.tablestream;
 
+import com.infodesire.commons.JAVA;
+import com.infodesire.commons.STRING;
 import com.infodesire.commons.datetime.SimpleDate;
 import com.infodesire.commons.datetime.SimpleDateTime;
 import com.infodesire.commons.datetime.SimpleTime;
@@ -508,6 +510,11 @@ public class Cell implements Comparable<Cell> {
     
     if( o.isNull() ) {
       return 1;
+    }
+    
+    // if at least one of the 2 cells have caption, we compare by caption
+    if( !STRING.isEmpty( caption ) || !STRING.isEmpty( o.caption ) ) {
+      return JAVA.compareTo( caption, o.caption );
     }
     
     ValueType type = getType();

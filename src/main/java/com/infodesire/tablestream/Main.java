@@ -22,6 +22,7 @@ import org.apache.commons.cli.PosixParser;
 public class Main {
   
   private static Options options = new Options();
+  private static TS ts = new TS();
   
   static {
     options.addOption( OptionBuilder //
@@ -54,8 +55,28 @@ public class Main {
       .create( "maxOpen" ) // 
       );
     options.addOption( OptionBuilder //
+      .hasArg() //
+      .withDescription( "Index (1-based) of first row to use." ) //
+      .create( "first" ) // 
+      );
+    options.addOption( OptionBuilder //
+      .hasArg() //
+      .withDescription( "Index (1-based) of last first row to use. Use 0 for last row of file." ) //
+      .create( "last" ) // 
+      );
+    options.addOption( OptionBuilder //
       .withDescription( "Operate quietly." ) //
       .create( "q" ) // 
+      );
+    options.addOption( OptionBuilder //
+      .hasArg() //
+      .withDescription( "Output file." ) //
+      .create( "out" ) // 
+      );
+    options.addOption( OptionBuilder //
+      .hasArg() //
+      .withDescription( "Number of concurrent threads." ) //
+      .create( "threads" ) // 
       );
   }
   
@@ -67,13 +88,11 @@ public class Main {
       
       CommandLine cli = parser.parse( options, args );
       
+      ts.setQuiet( cli.hasOption( "q" ) );
+      
       if( cli.hasOption( "d" ) ) {
         System.out.println( "Press RETURN to continue." );
         System.in.read();
-      }
-      
-      if( cli.hasOption( "q" ) ) {
-        TS.quiet = true;
       }
       
       @SuppressWarnings("unchecked")
@@ -86,6 +105,11 @@ public class Main {
       if( commands.size() == 1 ) {
         usage( "File name missing" );
         return;
+      }
+      
+      String value = cli.getOptionValue( "threads" );
+      if( value != null ) {
+        ts.setNumThreads( Integer.parseInt( value ) );
       }
       
       String command = commands.get( 0 );
@@ -103,6 +127,9 @@ public class Main {
       }
       else if( command.equals( "split" ) ) {
         split( cli, file, commands );
+      }
+      else if( command.equals( "slice" ) ) {
+        slice( cli, file, commands );
       }
       else if( command.equals( "join" ) ) {
         join( cli, file, commands );
@@ -156,7 +183,7 @@ public class Main {
     }
     
     try {
-      TS.sort( file, sortedFile, sortIndex );
+      ts.sort( file, sortedFile, sortIndex );
     }
     catch( FileNotFoundException ex ) {
       usage( "" + ex );
@@ -207,12 +234,15 @@ public class Main {
     }
     
     try {
-      TS.bigsort( file, sortedFile, sortIndex, rowCount, maxOpen );
+      ts.bigsort( file, sortedFile, sortIndex, rowCount, maxOpen );
     }
     catch( FileNotFoundException ex ) {
       usage( "" + ex );
     }
     catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    catch( InterruptedException ex ) {
       usage( "" + ex );
     }
     
@@ -222,7 +252,7 @@ public class Main {
   private static void count( CommandLine cli, File file, List<String> commands ) {
     
     try {
-      CountResult result = TS.count( file );
+      CountResult result = ts.count( file );
       error( result.toString() );
     }
     catch( FileNotFoundException ex ) {
@@ -247,7 +277,7 @@ public class Main {
     }
     
     try {
-      int line = TS.sorted( file, sortIndex );
+      int line = ts.sorted( file, sortIndex );
       error( line == -1 ? "sorted" : "not sorted at row " + line );
     }
     catch( FileNotFoundException ex ) {
@@ -288,7 +318,7 @@ public class Main {
     }
 
     try {
-      TS.split( file, rowCount, dir, sortIndex );
+      ts.split( file, rowCount, dir, sortIndex );
     }
     catch( FileNotFoundException ex ) {
       usage( "" + ex );
@@ -296,10 +326,57 @@ public class Main {
     catch( IOException ex ) {
       usage( "" + ex );
     }
+    catch( InterruptedException ex ) {
+      usage( "" + ex );
+    }
 
   }
 
 
+  private static void slice( CommandLine cli, File file, List<String> commands ) {
+    
+    String value = cli.getOptionValue( "first" );
+    
+    int first = 1;
+    if( value == null ) {
+      info( "No first row was specified. Using default: -first 1" );
+    } 
+    else {
+      first = Integer.parseInt( value );
+    }
+    
+    int last = 0;
+    if( value == null ) {
+      info( "No last row was specified. Using default: -last 0 (0 means end of file)" );
+    } 
+    else {
+      last = Integer.parseInt( value );
+    }
+    
+    value = cli.getOptionValue( "out" );
+    if( value == null ) {
+      PowerString s = new PowerString( file.getName() );
+      String extension = s.removeAfterLast( "." );
+      String name = s.toString();
+      value = name + ".slice." + extension;
+      info( "No output file was specified. Using default: -out " + value );
+    } 
+    File outputFile = new File( value );
+    
+    try {
+      int rows = ts.slice( file, outputFile, first, last );
+      info( rows + " rows written." );
+    }
+    catch( FileNotFoundException ex ) {
+      usage( "" + ex );
+    }
+    catch( IOException ex ) {
+      usage( "" + ex );
+    }
+    
+  }
+  
+  
   private static void join( CommandLine cli, File file, List<String> commands ) {
     
     String value = cli.getOptionValue( "dir" );
@@ -326,7 +403,7 @@ public class Main {
     }
     
     try {
-      TS.join( dir, file, sortIndex, maxOpen );
+      ts.join( dir, file, sortIndex, maxOpen );
     }
     catch( FileNotFoundException ex ) {
       usage( "" + ex );
@@ -362,10 +439,10 @@ public class Main {
     }
     
     if( random ) {
-      TS.random( file, rowCount, columnCount );
+      ts.random( file, rowCount, columnCount );
     }
     else {
-      TS.generic( file, rowCount, columnCount );
+      ts.generic( file, rowCount, columnCount );
     }
     
   }
@@ -377,7 +454,7 @@ public class Main {
   
   
   private static void info( String message ) {
-    if( !TS.quiet ) {
+    if( !ts.isQuiet() ) {
       System.out.println( message );
     }
   }
@@ -390,6 +467,7 @@ public class Main {
     usage.printHelp( "tablestream [OPTIONS] COMMAND FILENAME\n\n\n", options );
     System.out.println( "\nCommands are:\n" );
     System.out.println( "split ................. split file into smaller files (use -sort <args> to created sorted files)" );
+    System.out.println( "slice ................. write part of larger file to disk" );
     System.out.println( "join .................. join splitted files into one file (use -sort <args> to assume sorted files and create a sorted file)" );
     System.out.println( "sorted ................ test if file is sorted (needs sort index via -sort <args>)" );
     System.out.println( "count ................. count rows" );

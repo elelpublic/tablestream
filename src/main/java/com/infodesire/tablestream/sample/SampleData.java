@@ -72,7 +72,7 @@ public class SampleData {
   public static void sample( File file, int rowCount, int columnCount,
     boolean random ) throws IOException {
 
-    TSWriter writer = new TSWriter( file, rowCount );
+    TSWriter writer = new TSWriter( file );
     for( int i = 0; i < rowCount; i++ ) {
       writer.write( createSampleRow( i, columnCount, random ) );
     }
