@@ -11,19 +11,16 @@
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
+apply plugin: 'ivy-publish'
 
 
 group = 'com.infodesire'
-version = '0.1'
+version = '0.1-SNAPSHOT'
 mainClassName = 'com.infodesire.tablestream.Main'
 
 
 // In this section you declare where to find the dependencies of your project
 repositories {
-	
-    // Use 'maven central' for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     mavenCentral()
 }
 
@@ -71,6 +68,22 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+
+publishing {
+	publications {
+		ivyJava( IvyPublication ) {
+			from components.java
+		}
+	}
+	repositories {
+		ivy {
+	    	url 'file://s/repository/maven'
+	    	layout 'pattern' , {
+	            artifact '[organisation].[module]/jars/[artifact]-[revision](.[ext])'
+	        }
+	    }
+	}
 }
 
 // MAC OS X: do not show dock icon:
