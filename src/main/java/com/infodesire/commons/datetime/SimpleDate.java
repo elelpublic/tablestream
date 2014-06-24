@@ -7,6 +7,7 @@ import com.infodesire.commons.JAVA;
 import com.infodesire.commons.STRING;
 import com.infodesire.commons.string.PowerString;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,9 +24,12 @@ import java.util.Date;
  * There are however convenience conversion oparations to the java type Date.
  * 
  */
-public class SimpleDate implements Comparable<SimpleDate> {
+public class SimpleDate implements Comparable<SimpleDate>, Serializable {
   
   
+  private static final long serialVersionUID = 1L;
+
+
   private int year;
   
   

@@ -5,15 +5,20 @@ package com.infodesire.tablestream.tsfile;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import java.io.Serializable;
+
 
 /**
  * TS file format version number
  *
  */
 @XStreamAlias( "Header" )
-public class TSHeader {
+public class TSHeader implements Serializable {
   
 
+  private static final long serialVersionUID = 1L;
+  
+  
   @XStreamAlias( "Version" )
   public int version = 1;
   

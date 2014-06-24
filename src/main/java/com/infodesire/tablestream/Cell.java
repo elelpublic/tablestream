@@ -13,6 +13,7 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 import java.awt.Color;
+import java.io.Serializable;
 
 
 /**
@@ -41,7 +42,10 @@ import java.awt.Color;
  *
  */
 @XStreamAlias( "c" )
-public class Cell implements Comparable<Cell> {
+public class Cell implements Comparable<Cell>, Serializable {
+
+
+  private static final long serialVersionUID = 1L;
 
 
   @XStreamOmitField

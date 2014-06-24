@@ -6,6 +6,7 @@ package com.infodesire.tablestream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +16,11 @@ import java.util.List;
  *
  */
 @XStreamAlias( "r" )
-public class Row {
+public class Row implements Serializable {
 
+  
+  private static final long serialVersionUID = 1L;
+  
   
   @XStreamImplicit
   private List<Cell> cells;

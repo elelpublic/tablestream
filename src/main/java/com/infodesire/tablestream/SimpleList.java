@@ -5,6 +5,7 @@ package com.infodesire.tablestream;
 
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -14,7 +15,10 @@ import java.util.Iterator;
  * An immutable list of strings.
  *
  */
-public class SimpleList implements Comparable<SimpleList>, Iterable<String> {
+public class SimpleList implements Comparable<SimpleList>, Iterable<String>, Serializable {
+  
+  
+  private static final long serialVersionUID = 1L;
   
   
   @XStreamImplicit

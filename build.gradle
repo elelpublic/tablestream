@@ -7,11 +7,11 @@
  * user guide available at http://gradle.org/docs/1.12/userguide/tutorial_java_projects.html
  */
 
-// Apply the java plugin to add support for Java
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'ivy-publish'
+//apply plugin: 'findbugs'
 
 
 group = 'com.infodesire'
