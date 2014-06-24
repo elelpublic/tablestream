@@ -43,11 +43,16 @@ Count the rows:
 bin/tablestream count test.sorted.ts
 ```
 
+Status
+======
+
+- 0.1-SNAPSHOT developing initial feature set
+
 Roadmap
 =======
 
-- 0.2 first internal production release
-- 0.3 multi threading in the bigsort join phase
+- 0.1 first internal production release
+- 0.2 multi threading in the bigsort join phase
 
 Wishlist
 ========
