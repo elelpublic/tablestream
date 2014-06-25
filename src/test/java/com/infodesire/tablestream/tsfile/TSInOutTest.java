@@ -65,6 +65,10 @@ public class TSInOutTest {
       
       Row row = new Row();
       
+      if( i % 2 == 0 ) {
+        row.setProperty( "even", "true" );
+      }
+      
       for( int c = 0; c < COLUMNS; c++ ) {
         
         Cell cell = null;
@@ -72,6 +76,7 @@ public class TSInOutTest {
         
         if( type == ValueType.STRING ) {
           cell = new Cell( "CELL " + i + ":" + c );
+          cell.setProperty( "test", i + "-" + c );
         }
         else if( type == ValueType.INTEGER ) {
           cell = new Cell( i * c );
@@ -120,6 +125,13 @@ public class TSInOutTest {
       Row row = tsin.next();
       assertTrue( row != null );
       assertEquals( row, rows.get( i ) );
+      assertEquals( i + "-0", row.getCell( 0 ).getProperty( "test" ) );
+      if( i % 2 == 0 ) {
+        assertEquals( "true", row.getProperty( "even" ) );
+      }
+      else {
+        assertNull( row.getProperty( "even" ) );
+      }
     }
     assertNull( tsin.next() );
     tsin.close();

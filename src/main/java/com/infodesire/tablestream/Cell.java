@@ -10,10 +10,13 @@ import com.infodesire.commons.datetime.SimpleDateTime;
 import com.infodesire.commons.datetime.SimpleTime;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 import java.awt.Color;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -39,6 +42,10 @@ import java.io.Serializable;
  * <p>
  * 
  * Cells are comparable.
+ * <p>
+ * 
+ * Cells have a map of optional properties which can be freely defined. Keys and values of
+ * properties are Strings.
  *
  */
 @XStreamAlias( "c" )
@@ -97,6 +104,10 @@ public class Cell implements Comparable<Cell>, Serializable {
   @XStreamAlias( "fg" )
   @XStreamAsAttribute
   private Color fg;
+  
+  
+  @XStreamImplicit
+  private Set<Property> properties;
 
 
   /**
@@ -554,6 +565,42 @@ public class Cell implements Comparable<Cell>, Serializable {
     
   }
   
+  
+  /**
+   * Set property
+   * 
+   * @param key Key 
+   * @param value Value
+   * 
+   */
+  public void setProperty( String key, String value ) {
+    if( properties == null ) {
+      properties = new HashSet<Property>();
+    }
+    properties.add( new Property( key, value ) );
+  }
+  
+  
+  /**
+   * Get property
+   * 
+   * @param key Key
+   * @return Property or null if it does not exist
+   * 
+   */
+  public String getProperty( String key ) {
+    if( properties != null ) {
+      for( Property property : properties ) {
+        if( property.getKey().equals( key ) ) {
+          return property.getValue();
+        }
+      }
+      return null;
+    }
+    return null;
+  }
+  
 
 }
- 
+
+

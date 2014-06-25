@@ -8,7 +8,9 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -24,6 +26,10 @@ public class Row implements Serializable {
   
   @XStreamImplicit
   private List<Cell> cells;
+
+  
+  @XStreamImplicit
+  private Set<Property> properties;
   
   
   public Row() {}
@@ -93,6 +99,41 @@ public class Row implements Serializable {
     return "" + getCells();
   }
   
+
+  /**
+   * Set property
+   * 
+   * @param key Key 
+   * @param value Value
+   * 
+   */
+  public void setProperty( String key, String value ) {
+    if( properties == null ) {
+      properties = new HashSet<Property>();
+    }
+    properties.add( new Property( key, value ) );
+  }
+  
+  
+  /**
+   * Get property
+   * 
+   * @param key Key
+   * @return Property or null if it does not exist
+   * 
+   */
+  public String getProperty( String key ) {
+    if( properties != null ) {
+      for( Property property : properties ) {
+        if( property.getKey().equals( key ) ) {
+          return property.getValue();
+        }
+      }
+      return null;
+    }
+    return null;
+  }
+
 
 }
 

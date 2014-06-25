@@ -4,6 +4,7 @@
 package com.infodesire.tablestream.tsfile;
 
 import com.infodesire.tablestream.Cell;
+import com.infodesire.tablestream.Property;
 import com.infodesire.tablestream.Row;
 import com.infodesire.tablestream.SimpleList;
 import com.thoughtworks.xstream.XStream;
@@ -26,6 +27,7 @@ public class TSInOut {
     xStream.processAnnotations( TSHeader.class);
     xStream.processAnnotations( Row.class);
     xStream.processAnnotations( Cell.class);
+    xStream.processAnnotations( Property.class);
     xStream.processAnnotations( SimpleList.class);
     xStream.registerConverter( new SimpleDateConverter() );
     xStream.registerConverter( new SimpleTimeConverter() );
