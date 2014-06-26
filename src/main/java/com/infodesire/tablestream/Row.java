@@ -11,6 +11,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ import java.util.Set;
  *
  */
 @XStreamAlias( "r" )
-public class Row implements Serializable {
+public class Row implements Serializable, Iterable<Cell> {
 
   
   private static final long serialVersionUID = 1L;
@@ -168,6 +169,12 @@ public class Row implements Serializable {
    */
   public void setOriginalIndex( Integer originalIndex ) {
     this.originalIndex = originalIndex;
+  }
+
+
+  @Override
+  public Iterator<Cell> iterator() {
+    return cells.iterator();
   }
 
 
