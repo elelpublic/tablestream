@@ -3,7 +3,9 @@
 
 package com.infodesire.tablestream;
 
+import com.infodesire.commons.JAVA;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 import java.io.Serializable;
@@ -30,6 +32,16 @@ public class Row implements Serializable {
   
   @XStreamImplicit
   private Set<Property> properties;
+
+
+  /**
+   * Index of this row in the original order. This optional number will
+   * be used when rows have equal values (equality) or equal sort values (comparable).
+   * 
+   */
+  @XStreamAlias( "i" )
+  @XStreamAsAttribute
+  private Integer originalIndex;
   
   
   public Row() {}
@@ -88,7 +100,7 @@ public class Row implements Serializable {
             return false;
           }
         }
-        return true;
+        return JAVA.equal( originalIndex, row.originalIndex );
       }
     }
     return false;
@@ -132,6 +144,30 @@ public class Row implements Serializable {
       return null;
     }
     return null;
+  }
+
+
+  /**
+   * Index of this row in the original order. This optional number will
+   * be used when rows have equal values (equality) or equal sort values (comparable).
+   * 
+   * @return Optional: index of this row in the original order
+   * 
+   */
+  public int getOriginalIndex() {
+    return originalIndex == null ? 0 : originalIndex;
+  }
+  
+  
+  /**
+   * Setter
+   * 
+   * @param Index of this row in the original order. This optional number will
+   * be used when rows have equal values (equality) or equal sort values (comparable).
+   * 
+   */
+  public void setOriginalIndex( Integer originalIndex ) {
+    this.originalIndex = originalIndex;
   }
 
 

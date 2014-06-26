@@ -64,6 +64,7 @@ public class TSInOutTest {
     for( int i = 0; i < ROWS; i++ ) {
       
       Row row = new Row();
+      row.setOriginalIndex( i * 10 );
       
       if( i % 2 == 0 ) {
         row.setProperty( "even", "true" );
@@ -132,6 +133,7 @@ public class TSInOutTest {
       else {
         assertNull( row.getProperty( "even" ) );
       }
+      assertEquals( i * 10, row.getOriginalIndex() );
     }
     assertNull( tsin.next() );
     tsin.close();

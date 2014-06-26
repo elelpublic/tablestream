@@ -89,6 +89,24 @@ public class JAVA {
   }
 
 
+  /**
+   * Null safe equality check. Returns true if both objects are null. 
+   * 
+   * @param o1
+   * @param o2
+   * @return
+   */
+  public static boolean equal( Object o1, Object o2 ) {
+    if( o1 == null ) {
+      return o2 == null;
+    }
+    else if( o2 == null ) {
+      return false;
+    }
+    return o1.equals( o2 );
+  }
+
+
 }
 
 

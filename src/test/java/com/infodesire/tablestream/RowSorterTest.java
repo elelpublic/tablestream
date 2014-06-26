@@ -43,6 +43,14 @@ public class RowSorterTest {
     assertOrder( new RowSorter( new SortIndex( -2, 3, 1 ) ), r1, r2, r3, r4 );
     assertOrder( new RowSorter( new SortIndex( -2, -3, 1 ) ), r1, r3, r2, r4 );
     
+    // two equal rows sorted by original index
+    Row r5 = create( "AAA", 10, new SimpleDate( 2014, 12, 12 ) );
+    r4.setOriginalIndex( 4 );
+    r5.setOriginalIndex( 5 );
+    assertOrder( new RowSorter( new SortIndex( 1 ) ), r4, r5 );
+    r5.setOriginalIndex( 1 );
+    assertOrder( new RowSorter( new SortIndex( 1 ) ), r5, r4 );
+    
   }
 
 

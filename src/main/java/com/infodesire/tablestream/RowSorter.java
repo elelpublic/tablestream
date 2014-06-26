@@ -30,7 +30,8 @@ public class RowSorter implements Comparator<Row> {
         return desc ? -result : result;
       }
     }
-    return 0;
+    // as a fallback: rows might provide for an original index
+    return row1.getOriginalIndex() - row2.getOriginalIndex();
   }
 
 }
