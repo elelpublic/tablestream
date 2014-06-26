@@ -600,7 +600,29 @@ public class Cell implements Comparable<Cell>, Serializable {
     return null;
   }
   
+  
+  /**
+   * Getter
+   * 
+   * @return Value of the cell if this is a list typed cell. Null otherwise.
+   * 
+   */
+  public SimpleList getList() {
+    return listValue;
+  }
+  
 
+  /**
+   * Getter
+   * 
+   * @return Value of the cell if this is a boolean typed cell. Null otherwise.
+   * 
+   */
+  public Boolean getBoolean() {
+    return booleanValue;
+  }
+  
+  
 }
 
 
