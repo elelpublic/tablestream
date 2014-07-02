@@ -45,24 +45,6 @@ public class CellTest {
     assertEquals( c1, c1 );
     assertEquals( c1, c2 );
     
-    c2.setBg( Color.WHITE );
-    assertNotEquals( c1, c2 );
-    
-    c1.setBg( Color.BLACK );
-    assertNotEquals( c1, c2 );
-    
-    c1.setBg( Color.WHITE );
-    assertEquals( c1, c2 );
-    
-    c2.setFg( Color.WHITE );
-    assertNotEquals( c1, c2 );
-    
-    c1.setFg( Color.BLACK );
-    assertNotEquals( c1, c2 );
-    
-    c1.setFg( Color.WHITE );
-    assertEquals( c1, c2 );
-    
     c1.setCaption( "XXX" );
     assertNotEquals( c1, c2 );
     

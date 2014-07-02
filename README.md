@@ -58,5 +58,6 @@ Wishlist
 ========
 
 - more file formats: xls(x), csv, html
+- fail if output file/dir exists, but add force parameter
 
 

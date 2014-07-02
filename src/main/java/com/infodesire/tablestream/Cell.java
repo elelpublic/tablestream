@@ -13,7 +13,6 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
-import java.awt.Color;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -94,16 +93,6 @@ public class Cell implements Comparable<Cell>, Serializable {
   @XStreamAlias( "ca" )
   @XStreamAsAttribute
   private String caption;
-  
-  
-  @XStreamAlias( "bg" )
-  @XStreamAsAttribute
-  private Color bg;
-
-
-  @XStreamAlias( "fg" )
-  @XStreamAsAttribute
-  private Color fg;
   
   
   @XStreamImplicit
@@ -260,46 +249,6 @@ public class Cell implements Comparable<Cell>, Serializable {
   
   
   /**
-   * Getter
-   * 
-   * @return Background color (optional)
-   */
-  public Color getBg() {
-    return bg;
-  }
-
-
-  /**
-   * Setter
-   * 
-   * @param bg Background color (optional)
-   */
-  public void setBg( Color bg ) {
-    this.bg = bg;
-  }
-
-
-  /**
-   * Getter
-   * 
-   * @return Foreground color (optional)
-   */
-  public Color getFg() {
-    return fg;
-  }
-
-
-  /**
-   * Setter
-   * 
-   * @param fg Foreground color (optional)
-   */
-  public void setFg( Color fg ) {
-    this.fg = fg;
-  }
-
-
-  /**
    * Test for null.
    * 
    * @return Value contains null
@@ -378,8 +327,6 @@ public class Cell implements Comparable<Cell>, Serializable {
     }
     return type.shortName() + ":" + value // 
       + ( caption == null ? "" : " (cap=" + caption + ")" ) //
-      + ( bg == null ? "" : " (bg=" + bg + ")" ) //
-      + ( fg == null ? "" : " (fg=" + fg + ")" ) //
       ;
   }
 
@@ -478,12 +425,6 @@ public class Cell implements Comparable<Cell>, Serializable {
           if( !datetimeValue.equals( cell.datetimeValue ) ) {
             return false;
           }
-        }
-        if( !nullSafeEquals( bg, cell.bg ) ) {
-          return false;
-        }
-        if( !nullSafeEquals( fg, cell.fg ) ) {
-          return false;
         }
         if( !nullSafeEquals( caption, cell.caption ) ) {
           return false;
