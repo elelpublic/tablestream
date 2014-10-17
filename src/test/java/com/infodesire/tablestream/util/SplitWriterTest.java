@@ -55,6 +55,7 @@ public class SplitWriterTest {
       for( File file : dir.listFiles() ) {
         if( file.isFile() ) {
           assertEquals( fileCounter < 8 ? 5 : 3, ts.count( file ).getRows() );
+          System.out.println( "" + file );
           assertEquals( new File( dir, "split." + NUMBER.digits( 5, fileCounter ) + ".ts" ), file );
           fileCounter++;
           TSReader reader = new TSReader( file );
