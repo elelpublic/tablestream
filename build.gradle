@@ -15,7 +15,7 @@ apply plugin: 'ivy-publish'
 
 
 group = 'com.infodesire'
-version = '0.1-SNAPSHOT'
+version = '0.2'
 mainClassName = 'com.infodesire.tablestream.Main'
 
 
