@@ -15,7 +15,7 @@ apply plugin: 'ivy-publish'
 
 
 group = 'com.infodesire'
-version = '0.2'
+version = '0.2.1'
 mainClassName = 'com.infodesire.tablestream.Main'
 
 
@@ -46,6 +46,11 @@ dependencies {
     // 'test.useTestNG()' to your build script.
     testCompile 'junit:junit:4.11'
 
+}
+
+compileJava {
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6
 }
 
 eclipse {
